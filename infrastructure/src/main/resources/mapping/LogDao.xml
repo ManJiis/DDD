@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="poc.infrastructure.systemManage.repository.dao.LogDao">
+
+    <resultMap type="poc.infrastructure.systemManage.po.Log" id="LogMap">
+        <result property="logId" column="LOG_ID" jdbcType="VARCHAR"/>
+        <result property="logType" column="LOG_TYPE" jdbcType="VARCHAR"/>
+        <result property="serviceName" column="SERVICE_NAME" jdbcType="VARCHAR"/>
+        <result property="userId" column="USER_ID" jdbcType="VARCHAR"/>
+        <result property="logLevel" column="LOG_LEVEL" jdbcType="VARCHAR"/>
+        <result property="logCreateTime" column="LOG_CREATE_TIME" jdbcType="TIMESTAMP"/>
+        <result property="logContent" column="LOG_CONTENT" jdbcType="VARCHAR"/>
+        <result property="logIp" column="LOG_IP" jdbcType="VARCHAR"/>
+        <result property="createTime" column="CREATETIME" jdbcType="TIMESTAMP"/>
+        <result property="exchangeTime" column="EXCHANGETIME" jdbcType="TIMESTAMP"/>
+        <result property="createId" column="CREATORID" jdbcType="VARCHAR"/>
+        <result property="updateId" column="UPDATERID" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="IS_DEL" jdbcType="VARCHAR"/>
+        <result property="requestMethod" column="REQUEST_METHOD" jdbcType="VARCHAR"/>
+        <result property="actionMethod" column="ACTION_METHOD" jdbcType="VARCHAR"/>
+        <result property="actionParams" column="ACTION_PARAMS" jdbcType="VARCHAR"/>
+        <result property="actionUrl" column="ACTION_URL" jdbcType="VARCHAR"/>
+        <result property="browser" column="BROWSER" jdbcType="VARCHAR"/>
+        <result property="operate" column="OPERATE" jdbcType="VARCHAR"/>
+        <result property="operateStatus" column="OPERATE_STATUS" jdbcType="VARCHAR"/>
+        <result property="loginName" column="LOGIN_NAME"/>
+        <result property="userName" column="USER_NAME"/>
+        <result property="moduleName" column="MODULE_NAME" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="BaseResultmap">
+        LOG_ID, LOG_TYPE, SERVICE_NAME,
+        USER_ID, LOG_LEVEL, LOG_CREATE_TIME,
+        LOG_CONTENT, LOG_IP,CREATETIME,
+        EXCHANGETIME,CREATORID,UPDATERID,IS_DEL,REQUEST_METHOD,ACTION_METHOD,ACTION_PARAMS,
+        ACTION_URL,BROWSER,OPERATE,OPERATE_STATUS
+    </sql>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="LogMap">
+        select
+          LOG_ID, LOG_TYPE, SERVICE_NAME, USER_ID, LOG_LEVEL, LOG_CREATE_TIME, LOG_CONTENT, LOG_IP
+        from T_XT_LOG
+        where LOG_ID = #{logId}
+    </select>
+
+    <select id="queryLoginLog" resultMap="LogMap">
+        SELECT
+        t1.*,
+        t2.LOGIN_NAME,
+        t2.USER_NAME
+        FROM
+        T_XT_LOG AS t1
+        LEFT JOIN T_XT_USER AS t2 ON t1.USER_ID = t2.USER_ID
+        WHERE LOG_TYPE = '02'
+        <if test="rs.startTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &gt;= #{rs.startTime}
+        </if>
+        <if test="rs.endTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &lt;= #{rs.endTime}
+        </if>
+        <if test="rs.name != null and rs.name !=''">
+            AND t2.LOGIN_NAME = #{rs.name}
+        </if>
+        ORDER BY LOG_CREATE_TIME DESC
+        LIMIT #{pg.start}, #{pg.pageSize}
+    </select>
+    <select id="queryLoginLogCount" resultType="java.lang.Long">
+        SELECT
+        count(0)
+        FROM
+        T_XT_LOG AS t1
+        LEFT JOIN T_XT_USER AS t2 ON t1.USER_ID = t2.USER_ID
+        WHERE LOG_TYPE = '02'
+        <if test="rs.startTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &gt;= #{rs.startTime}
+        </if>
+        <if test="rs.endTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &lt;= #{rs.endTime}
+        </if>
+        <if test="rs.name != null and rs.name !=''">
+            AND t2.LOGIN_NAME = #{rs.name}
+        </if>
+    </select>
+
+    <select id="queryOperateLog" resultMap="LogMap">
+        SELECT
+        t1.*,
+        t2.LOGIN_NAME,
+        t2.USER_NAME
+        FROM
+        T_XT_LOG AS t1
+        LEFT JOIN T_XT_USER AS t2 ON t1.USER_ID = t2.USER_ID
+        WHERE LOG_TYPE = '01'
+        <if test="rs.startTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &gt;= #{rs.startTime}
+        </if>
+        <if test="rs.endTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &lt;= #{rs.endTime}
+        </if>
+        <if test="rs.name != null and rs.name !=''">
+            AND t2.LOGIN_NAME = #{rs.name}
+        </if>
+        ORDER BY LOG_CREATE_TIME DESC
+        LIMIT #{pg.start}, #{pg.pageSize}
+    </select>
+    <select id="queryOperateLogCount" resultType="java.lang.Long">
+        SELECT
+        count(0)
+        FROM
+        T_XT_LOG AS t1
+        LEFT JOIN T_XT_USER AS t2 ON t1.USER_ID = t2.USER_ID
+        WHERE LOG_TYPE = '01'
+        <if test="rs.startTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &gt;= #{rs.startTime}
+        </if>
+        <if test="rs.endTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &lt;= #{rs.endTime}
+        </if>
+        <if test="rs.name != null and rs.name !=''">
+            AND t2.LOGIN_NAME = #{rs.name}
+        </if>
+    </select>
+
+
+    <!--新增所有列-->
+    <insert id="insert">
+        INSERT INTO
+            T_XT_LOG(LOG_ID,LOG_TYPE, SERVICE_NAME, USER_ID, LOG_LEVEL, LOG_CREATE_TIME, LOG_CONTENT, LOG_IP,REQUEST_METHOD,ACTION_METHOD,ACTION_PARAMS,ACTION_URL,BROWSER,OPERATE,OPERATE_STATUS,USER_NAME,LOGIN_NAME,MODULE_NAME)
+        VALUES (#{logId},#{logType}, #{serviceName}, #{userId}, #{logLevel}, #{logCreateTime}, #{logContent}, #{logIp}, #{requestMethod}, #{actionMethod}, #{actionParams}, #{actionUrl}, #{browser}, #{operate},#{operateStatus},#{userName},#{loginName},#{moduleName})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update T_XT_LOG
+        <set>
+            <if test="logType != null and logType != ''">
+                LOG_TYPE = #{logType},
+            </if>
+            <if test="serviceName != null and serviceName != ''">
+                SERVICE_NAME = #{serviceName},
+            </if>
+            <if test="userId != null and userId != ''">
+                USER_ID = #{userId},
+            </if>
+            <if test="logLevel != null and logLevel != ''">
+                LOG_LEVEL = #{logLevel},
+            </if>
+            <if test="logCreateTime != null">
+                LOG_CREATE_TIME = #{logCreateTime},
+            </if>
+            <if test="logContent != null and logContent != ''">
+                LOG_CONTENT = #{logContent},
+            </if>
+            <if test="logIp != null and logIp != ''">
+                LOG_IP = #{logIp},
+            </if>
+        </set>
+        where LOG_ID = #{logId}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from T_XT_LOG where LOG_ID = #{logId}
+    </delete>
+
+    <select id="getAppLog" resultMap="LogMap">
+        SELECT
+        t1.*,
+        t2.LOGIN_NAME,
+        t2.TEL tel,
+        t2.USER_NAME
+        FROM
+        T_XT_LOG AS t1
+        LEFT JOIN T_XT_USER AS t2 ON t1.USER_ID = t2.USER_ID
+        WHERE t2.USER_TYPE = '02'
+        <if test="rs.startTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &gt;= #{rs.startTime}
+        </if>
+        <if test="rs.endTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &lt;= #{rs.endTime}
+        </if>
+        <if test="rs.moduleName != null and rs.moduleName !=''">
+            AND t1.MODULE_NAME = #{rs.moduleName}
+        </if>
+        ORDER BY LOG_CREATE_TIME DESC
+        LIMIT #{pg.start}, #{pg.pageSize}
+    </select>
+    <select id="getAppLogCount" resultType="java.lang.Long">
+        SELECT
+        count(0)
+        FROM
+        T_XT_LOG AS t1
+        LEFT JOIN T_XT_USER AS t2 ON t1.USER_ID = t2.USER_ID
+        WHERE t2.USER_TYPE = '02'
+        <if test="rs.startTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &gt;= #{rs.startTime}
+        </if>
+        <if test="rs.endTime != null">
+            AND DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%d') &lt;= #{rs.endTime}
+        </if>
+        <if test="rs.moduleName != null and rs.moduleName !=''">
+            AND t1.MODULE_NAME = #{rs.moduleName}
+        </if>
+    </select>
+
+    <select id="statLoginLog" resultType="java.util.Map">
+        SELECT
+            count( LOG_ID ) count,
+            <choose>
+                <when test="month!=null and month!=''">
+                    DATE_FORMAT(LOG_CREATE_TIME,'%e') value
+                </when>
+                <otherwise>
+                    DATE_FORMAT(LOG_CREATE_TIME,'%c') value
+                </otherwise>
+            </choose>
+        FROM
+            `T_XT_LOG`
+        WHERE
+             ( OPERATE = '用户登录' OR OPERATE = 'PC端统一登录' )
+             AND DATE_FORMAT( LOG_CREATE_TIME, '%Y' ) = #{year}
+             <if test="month!=null and month!=''">
+                 AND DATE_FORMAT(LOG_CREATE_TIME,'%c') = #{month}
+             </if>
+        GROUP BY
+        <choose>
+            <when test="month!=null and month!=''">
+                DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m-%e');
+            </when>
+            <otherwise>
+                DATE_FORMAT(LOG_CREATE_TIME,'%Y-%m')
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

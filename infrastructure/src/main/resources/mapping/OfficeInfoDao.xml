@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="poc.infrastructure.systemManage.repository.dao.OfficeInfoDao">
+    <resultMap id="BaseResultMap" type="poc.infrastructure.systemManage.po.OfficeInfo">
+        <id column="ID" property="id" jdbcType="INTEGER"/>
+        <result column="OFFICE_NAME" property="officeName" jdbcType="VARCHAR"/>
+        <result column="COMMUNICATE_ADDR" property="communicateAddr" jdbcType="VARCHAR"/>
+        <result column="ZIPCODE" property="zipcode" jdbcType="VARCHAR"/>
+        <result column="FAX" property="fax" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    ID, OFFICE_NAME, COMMUNICATE_ADDR, ZIPCODE, FAX
+    </sql>
+    <insert id="insert" parameterType="poc.infrastructure.systemManage.po.OfficeInfo">
+    insert into T_XT_OFFICE_INFO (ID, OFFICE_NAME, COMMUNICATE_ADDR, 
+      ZIPCODE, FAX)
+    values (#{id,jdbcType=INTEGER}, #{officeName,jdbcType=VARCHAR}, #{communicateAddr,jdbcType=VARCHAR}, 
+      #{zipcode,jdbcType=VARCHAR}, #{fax,jdbcType=VARCHAR})
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="poc.infrastructure.systemManage.po.OfficeInfo">
+        update T_XT_OFFICE_INFO
+        <set>
+            <if test="officeName != null">
+                OFFICE_NAME = #{officeName,jdbcType=VARCHAR},
+            </if>
+            <if test="communicateAddr != null">
+                COMMUNICATE_ADDR = #{communicateAddr,jdbcType=VARCHAR},
+            </if>
+            <if test="zipcode != null">
+                ZIPCODE = #{zipcode,jdbcType=VARCHAR},
+            </if>
+            <if test="fax != null">
+                FAX = #{fax,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where ID = #{id,jdbcType=INTEGER}
+    </update>
+
+    <select id="getListInfo" resultMap="BaseResultMap">
+      SELECT * FROM T_XT_OFFICE_INFO
+    </select>
+
+</mapper>

@@ -1,0 +1,18 @@
+{
+  "properties": [
+    {
+      "name": "password.salt",
+      "type": "java.lang.String",
+      "description": "Description for password.salt."
+    },
+    {
+      "name": "gzyj.sso.url",
+      "type": "java.lang.String",
+      "description": "Description for gzyj.sso.url."
+    },
+    {
+      "name": "gzyj.ssoCreateSt.url",
+      "type": "java.lang.String",
+      "description": "Description for gzyj.ssoCreateSt.url."
+    }
+  ] }

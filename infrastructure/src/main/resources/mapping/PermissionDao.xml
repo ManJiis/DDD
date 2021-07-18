@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="poc.infrastructure.systemManage.repository.dao.PermissionDao">
+
+    <resultMap type="poc.infrastructure.systemManage.po.Permission" id="PermissionMap">
+        <result property="permissionId" column="PERMISSION_ID" jdbcType="VARCHAR"/>
+        <result property="permissionName" column="PERMISSION_NAME" jdbcType="VARCHAR"/>
+        <result property="permissionType" column="PERMISSION_TYPE" jdbcType="VARCHAR"/>
+        <result property="permissionUrl" column="PERMISSION_URL" jdbcType="VARCHAR"/>
+        <result property="permissionCode" column="PERMISSION_CODE" jdbcType="VARCHAR"/>
+        <result property="icon" column="ICON" jdbcType="VARCHAR"/>
+        <result property="fatherId" column="FATHER_ID" jdbcType="VARCHAR"/>
+        <result property="permissionLevel" column="PERMISSION_LEVEL" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="IS_DEL" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap type="poc.domain.systemManage.model.PermissionSource" id="PermissionSourceMap">
+        <result property="permissionId" column="PERMISSION_ID" jdbcType="VARCHAR"/>
+        <result property="permissionName" column="PERMISSION_NAME" jdbcType="VARCHAR"/>
+        <result property="permissionType" column="PERMISSION_TYPE" jdbcType="VARCHAR"/>
+        <result property="permissionUrl" column="PERMISSION_URL" jdbcType="VARCHAR"/>
+        <result property="permissionCode" column="PERMISSION_CODE" jdbcType="VARCHAR"/>
+        <result property="icon" column="ICON" jdbcType="VARCHAR"/>
+        <result property="fatherId" column="FATHER_ID" jdbcType="VARCHAR"/>
+        <result property="permissionLevel" column="PERMISSION_LEVEL" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="IS_DEL" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="PermissionMap">
+        select
+          PERMISSION_ID, PERMISSION_NAME, PERMISSION_TYPE, PERMISSION_URL, PERMISSION_CODE, ICON, FATHER_ID, PERMISSION_LEVEL, IS_DEL
+        from T_XT_PERMISSION
+        where PERMISSION_ID = #{permissionId}
+        AND IS_DEL = '0'
+    </select>
+    <!-- 查询一级菜单 -->
+    <select id="queryOneMenu" resultMap="PermissionSourceMap">
+        SELECT
+          PERMISSION_ID, PERMISSION_NAME, PERMISSION_TYPE, PERMISSION_URL, PERMISSION_CODE, ICON, FATHER_ID, PERMISSION_LEVEL, IS_DEL
+        FROM T_XT_PERMISSION
+        WHERE PERMISSION_LEVEL = '1'
+        AND IS_DEL = '0'
+        ORDER BY PERMISSION_ID
+    </select>
+
+    <!-- 根据上级菜单id查询子菜单 -->
+    <select id="queryChildrenMenu" resultMap="PermissionSourceMap">
+        SELECT
+          PERMISSION_ID, PERMISSION_NAME, PERMISSION_TYPE, PERMISSION_URL, PERMISSION_CODE, ICON, FATHER_ID, PERMISSION_LEVEL, IS_DEL
+        FROM T_XT_PERMISSION
+        WHERE FATHER_ID = #{fatherId}
+        AND IS_DEL = '0'
+        ORDER BY PERMISSION_ID
+    </select>
+
+    <!-- 根据角色查询一级菜单 -->
+    <select id="queryOneMenuByRoleId" resultMap="PermissionSourceMap">
+        SELECT
+            t1.*
+        FROM
+            T_XT_PERMISSION AS t1
+            LEFT JOIN T_XT_ROLE_PERMISSION AS t2 ON t2.PERMISSION_ID = t1.PERMISSION_ID
+        WHERE
+            t2.ROLE_ID = #{roleId} AND PERMISSION_LEVEL = '1'
+            AND t1.IS_DEL = '0'
+        ORDER BY PERMISSION_ID
+    </select>
+    <!-- 根据角色id上级菜单id查询自己菜单 -->
+    <select id="queryChildrenMenuByRoleId" resultMap="PermissionSourceMap">
+        SELECT
+          t1.*
+        FROM
+            T_XT_PERMISSION AS t1
+            LEFT JOIN T_XT_ROLE_PERMISSION AS t2 ON t2.PERMISSION_ID = t1.PERMISSION_ID
+        WHERE FATHER_ID = #{fatherId} AND t2.ROLE_ID = #{roleId}
+        AND t1.IS_DEL = '0'
+        ORDER BY PERMISSION_ID
+    </select>
+
+    <select id="getAllPermissionByUserId" resultType="java.lang.String">
+        SELECT
+            GROUP_CONCAT( DISTINCT d.PERMISSION_CODE )
+        FROM
+            T_XT_USER a
+            LEFT JOIN T_XT_USER_ROLE b on a.USER_ID = b.USER_ID
+            LEFT JOIN T_XT_ROLE_PERMISSION c on b.ROLE_ID = c.ROLE_ID
+            LEFT JOIN T_XT_PERMISSION d on c.PERMISSION_ID = d.PERMISSION_ID
+        WHERE
+            a.USER_ID = #{userId}
+            AND d.IS_DEL = '0'
+    </select>
+
+    <select id="getOneMenu" resultMap="PermissionMap">
+        SELECT
+          *
+        FROM T_XT_PERMISSION
+        WHERE PERMISSION_LEVEL = '1'
+        <if test="permissionType!=null and permissionType!=''">
+            AND PERMISSION_TYPE = #{permissionType}
+        </if>
+        AND IS_DEL = '0'
+        ORDER BY PERMISSION_ID DESC
+    </select>
+</mapper>

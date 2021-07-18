@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="poc.infrastructure.systemManage.repository.dao.CompilerDao" >
+  <resultMap id="BaseResultMap" type="poc.infrastructure.systemManage.po.Compiler" >
+    <id column="ID" property="id" jdbcType="BIGINT" />
+    <result column="NAME" property="name" jdbcType="VARCHAR" />
+    <result column="ORG_NAME" property="orgName" jdbcType="VARCHAR" />
+    <result column="POSITION" property="position" jdbcType="VARCHAR" />
+    <result column="CONTACT" property="contact" jdbcType="VARCHAR" />
+    <result column="CREATETIME" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="EXCHANGETIME" property="exchangeTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <select id="getList" resultMap="BaseResultMap">
+    SELECT
+    *
+    FROM
+    T_XT_COMPILER
+    WHERE
+    IS_DEL='0'
+    <if test="name!=null and name!=''">
+      AND `NAME` like CONCAT('%',#{name},'%')
+    </if>
+    <if test="orgName!=null and orgName!=''">
+      AND `ORG_NAME` like CONCAT('%',#{orgName},'%')
+    </if>
+    LIMIT #{pg.start}, #{pg.pageSize}
+  </select>
+
+  <select id="getListCount" resultType="java.lang.Long">
+    SELECT
+    count(0)
+    FROM
+    T_XT_COMPILER
+    WHERE
+    IS_DEL='0'
+    <if test="name!=null and name!=''">
+      AND `NAME` like CONCAT('%',#{name},'%')
+    </if>
+    <if test="orgName!=null and orgName!=''">
+      AND `ORG_NAME` like CONCAT('%',#{orgName},'%')
+    </if>
+  </select>
+
+  <insert id="insert" parameterType="poc.infrastructure.systemManage.po.Compiler" >
+    insert into T_XT_COMPILER (ID, NAME, ORG_NAME, 
+      POSITION, CONTACT, CREATETIME, 
+      EXCHANGETIME)
+    values (#{id,jdbcType=INTEGER}, #{name,jdbcType=VARCHAR}, #{orgName,jdbcType=VARCHAR},
+      #{position,jdbcType=VARCHAR}, #{contact,jdbcType=VARCHAR}, NOW(),
+      NOW())
+  </insert>
+  <update id="updateById" parameterType="poc.infrastructure.systemManage.po.Compiler" >
+    update T_XT_COMPILER
+    <set >
+      <if test="name != null" >
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="orgName != null" >
+        ORG_NAME = #{orgName,jdbcType=VARCHAR},
+      </if>
+      <if test="position != null" >
+        POSITION = #{position,jdbcType=VARCHAR},
+      </if>
+      <if test="contact != null" >
+        CONTACT = #{contact,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        CREATETIME = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="exchangeTime != null" >
+        EXCHANGETIME = #{exchangeTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+
+  <update id="deleteById" parameterType="java.lang.String">
+    update T_XT_COMPILER
+    set IS_DEL = '1'
+    where ID = #{id}
+  </update>
+</mapper>

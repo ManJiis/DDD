@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="poc.infrastructure.systemManage.repository.dao.UserDao">
+
+    <resultMap type="poc.infrastructure.systemManage.po.User" id="UserMap">
+        <result property="userId" column="USER_ID" jdbcType="INTEGER"/>
+        <result property="loginName" column="LOGIN_NAME" jdbcType="VARCHAR"/>
+        <result property="loginPassword" column="LOGIN_PASSWORD" jdbcType="VARCHAR"/>
+        <result property="userName" column="USER_NAME" jdbcType="VARCHAR"/>
+        <result property="realName" column="REAL_NAME" jdbcType="VARCHAR"/>
+        <result property="tel" column="TEL" jdbcType="VARCHAR"/>
+        <result property="organization" column="ORGANIZATION" jdbcType="VARCHAR"/>
+        <result property="department" column="DEPARTMENT" jdbcType="VARCHAR"/>
+        <result property="county" column="COUNTY" jdbcType="VARCHAR"/>
+        <result property="email" column="EMAIL" jdbcType="VARCHAR"/>
+        <result property="userStatus" column="USER_STATUS" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="IS_DEL" jdbcType="VARCHAR"/>
+        <result property="createTime" column="CREATETIME" jdbcType="TIMESTAMP"/>
+        <result property="city" column="CITY" jdbcType="VARCHAR"/>
+        <result property="regionLevel" column="REGION_LEVEL" jdbcType="VARCHAR"/>
+        <result property="userType" column="USER_TYPE" jdbcType="VARCHAR"/>
+        <result property="loginCode" column="LOGIN_CODE" jdbcType="VARCHAR"/>
+        <result property="loginExpireTime" column="LOGIN_EXPIRETIME" jdbcType="TIMESTAMP"/>
+        <result property="registCode" column="REGIST_CODE" jdbcType="VARCHAR"/>
+        <result property="registExpireTime" column="REGIST_EXPIRETIME" jdbcType="TIMESTAMP"/>
+        <result property="office" column="OFFICE" jdbcType="TIMESTAMP"/>
+        <result property="id" column="ID" jdbcType="VARCHAR"/>
+        <result property="position" column="POSITION" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap type="poc.infrastructure.systemManage.po.Role" id="RoleMap">
+        <result property="roleId" column="ROLE_ID" jdbcType="VARCHAR"/>
+        <result property="roleCode" column="ROLE_CODE" jdbcType="VARCHAR"/>
+        <result property="roleName" column="ROLE_NAME" jdbcType="VARCHAR"/>
+        <result property="remark" column="REMARK" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="IS_DEL" jdbcType="VARCHAR"/>
+        <result property="createTime" column="CREATETIME" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+
+    <select id="getLoginVerifyCode" resultType="poc.domain.systemManage.model.UserSource">
+        SELECT
+            LOGIN_CODE AS loginCode,
+            LOGIN_EXPIRETIME AS loginExpireTime
+        FROM T_XT_VERIFYCODE
+        WHERE TEL = #{tel}
+    </select>
+
+    <delete id="deleteVerCode">
+        DELETE FROM T_XT_VERCODE WHERE  DATE(LOGIN_EXPIRETIME) &lt;= DATE(DATE_SUB(NOW(),INTERVAL 10 DAY))
+    </delete>
+
+    <select id="getLoginVerCode" resultType="poc.domain.systemManage.model.UserSource">
+        SELECT
+            LOGIN_CODE AS loginCode,
+            LOGIN_EXPIRETIME AS loginExpireTime
+        FROM T_XT_VERCODE
+        WHERE UUID = #{uuid}
+    </select>
+    <select id="getRegistVerifyCode" resultType="poc.domain.systemManage.model.UserSource">
+        SELECT
+            REGIST_CODE AS registCode,
+            REGIST_EXPIRETIME AS registExpireTime
+        FROM T_XT_VERIFYCODE
+        WHERE TEL = #{tel}
+    </select>
+
+    <insert id="insertLoginVerifyCode">
+        UPDATE T_XT_USER SET LOGIN_CODE = #{verifyCode},LOGIN_EXPIRETIME = #{expireTime} WHERE TEL=#{tel}
+    </insert>
+    <update id="updateLoginVerifyCode">
+        UPDATE T_XT_VERIFYCODE SET LOGIN_CODE = #{verifyCode},LOGIN_EXPIRETIME = #{expireTime} WHERE TEL=#{tel}
+    </update>
+
+    <update id="updateRegistVerifyCode">
+        UPDATE T_XT_VERIFYCODE SET REGIST_CODE = #{verifyCode},REGIST_EXPIRETIME = #{expireTime} WHERE TEL=#{tel}
+    </update>
+    <insert id="insertRegistVerifyCode">
+        INSERT INTO T_XT_VERIFYCODE(TEL,REGIST_CODE,REGIST_EXPIRETIME) VALUES (#{tel}, #{verifyCode}, #{expireTime})
+    </insert>
+
+    <insert id="insertVerCode">
+        INSERT INTO T_XT_VERCODE(UUID,LOGIN_CODE,LOGIN_EXPIRETIME) VALUES (#{uuid}, #{loginCode}, #{loginExpireTime})
+    </insert>
+
+    <select id="isExistByTel" resultType="java.lang.Integer">
+        SELECT count(0) FROM T_XT_VERIFYCODE WHERE TEL = #{tel}
+    </select>
+
+    <sql id="BaseMapList">
+        USER_ID, LOGIN_NAME, LOGIN_PASSWORD, USER_NAME, REAL_NAME, TEL, ORGANIZATION, DEPARTMENT, COUNTY, EMAIL, USER_STATUS, IS_DEL,CREATETIME
+    </sql>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="UserMap">
+        select
+          USER_ID, LOGIN_NAME, LOGIN_PASSWORD, USER_NAME, REAL_NAME, TEL, ORGANIZATION, DEPARTMENT, COUNTY, EMAIL, USER_STATUS, IS_DEL ,OFFICE
+        from T_XT_USER
+        where USER_ID = #{userId}
+    </select>
+
+    <!-- 查询登录名是否已存在 -->
+    <select id="queryLoginName" resultType="java.lang.Long">
+        SELECT
+          count(0)
+        FROM T_XT_USER
+        WHERE LOGIN_NAME = #{name}
+        AND IS_DEL = '0'
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryUserList" resultMap="UserMap">
+        SELECT
+        USER_ID,
+        LOGIN_NAME,
+        LOGIN_PASSWORD,
+        USER_NAME,
+        REAL_NAME,
+        TEL,
+        ORGANIZATION,
+        DEPARTMENT,
+        COUNTY,
+        (select t1.REGIONNAME FROM T_XT_CODE_REGION AS t1 where t1.CODE_REGION = COUNTY) AS countyName,
+        EMAIL,
+        USER_STATUS,
+        CREATETIME,
+        CITY,
+        (select t1.REGIONNAME FROM T_XT_CODE_REGION AS t1 where t1.CODE_REGION = CITY) AS cityName,
+        REGION_LEVEL,
+        OFFICE
+        FROM T_XT_USER
+        WHERE 1=1 AND IS_DEL='0'
+        <if test="name != null and name !=''">
+            AND (LOGIN_NAME LIKE CONCAT('%',#{name},'%') OR USER_NAME LIKE CONCAT('%',#{name},'%') OR REAL_NAME LIKE
+            CONCAT('%',#{name},'%'))
+        </if>
+        <if test="startTime != null and startTime!=''">
+            AND DATE_FORMAT(CREATETIME,'%Y-%m-%d') &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime!=''">
+            AND DATE_FORMAT(CREATETIME,'%Y-%m-%d') &lt;= #{endTime}
+        </if>
+        <if test="userType != null and userType!=''">
+            AND USER_TYPE = #{userType}
+        </if>
+        <if test="userStatus != null and userStatus!=''">
+            AND USER_STATUS = #{userStatus}
+        </if>
+        ORDER BY CREATETIME DESC
+        LIMIT #{pg.start}, #{pg.pageSize}
+    </select>
+    <select id="queryUserListCount" resultType="java.lang.Long">
+        SELECT
+        count(0)
+        FROM T_XT_USER
+        WHERE 1=1 AND IS_DEL='0'
+        <if test="name != null and name !=''">
+            AND (LOGIN_NAME LIKE CONCAT('%',#{name},'%') OR USER_NAME LIKE CONCAT('%',#{name},'%') OR REAL_NAME LIKE
+            CONCAT('%',#{name},'%'))
+        </if>
+        <if test="startTime != null and startTime!=''">
+            AND DATE_FORMAT(CREATETIME,'%Y-%m-%d') &gt;= #{startTime}
+        </if>
+        <if test="endTime != null and endTime!=''">
+            AND DATE_FORMAT(CREATETIME,'%Y-%m-%d') &lt;= #{endTime}
+        </if>
+        <if test="userType != null and userType!=''">
+            AND USER_TYPE = #{userType}
+        </if>
+        <if test="userStatus != null and userStatus!=''">
+            AND USER_STATUS = #{userStatus}
+        </if>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="userId" useGeneratedKeys="true">
+        insert into T_XT_USER(LOGIN_NAME, LOGIN_PASSWORD, USER_NAME, REAL_NAME, TEL, ORGANIZATION,
+         DEPARTMENT, COUNTY, EMAIL, USER_STATUS,CREATETIME,CITY,REGION_LEVEL,USER_TYPE,OFFICE,`POSITION`)
+        values (#{loginName}, #{loginPassword}, #{userName}, #{realName}, #{tel}, #{organization},
+         #{department}, #{county}, #{email}, #{userStatus},#{createTime},#{city},#{regionLevel},#{userType},#{office},#{position})
+    </insert>
+
+    <!--通过主键修改拥护信息-->
+    <update id="updateUserById">
+        UPDATE T_XT_USER
+        <set>
+            <if test="loginName != null and loginName != ''">
+                LOGIN_NAME = #{loginName},
+            </if>
+            <if test="loginPassword != null and loginPassword != ''">
+                LOGIN_PASSWORD = #{loginPassword},
+            </if>
+            <if test="userName != null and userName != ''">
+                USER_NAME = #{userName},
+            </if>
+            <if test="realName != null and realName != ''">
+                REAL_NAME = #{realName},
+            </if>
+            <if test="tel != null and tel != ''">
+                TEL = #{tel},
+            </if>
+            <if test="organization != null and organization != ''">
+                ORGANIZATION = #{organization},
+            </if>
+            <if test="department != null and department != ''">
+                DEPARTMENT = #{department},
+            </if>
+            <if test="county != null and county != ''">
+                COUNTY = #{county},
+            </if>
+            <if test="email != null and email != ''">
+                EMAIL = #{email},
+            </if>
+            <if test="userStatus != null and userStatus != ''">
+                USER_STATUS = #{userStatus},
+            </if>
+            <if test="isDelete != null and isDelete != ''">
+                IS_DEL = #{isDelete},
+            </if>
+            <if test="city != null and city != ''">
+                CITY = #{city},
+            </if>
+            <if test="regionLevel != null and regionLevel != ''">
+                REGION_LEVEL = #{regionLevel},
+            </if>
+            <if test="office != null and office != ''">
+                OFFICE = #{office},
+            </if>
+        </set>
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <!--通过主键删除-->
+    <update id="deleteById">
+        UPDATE T_XT_USER SET IS_DEL = '1' WHERE USER_ID = #{userId}
+    </update>
+
+    <select id="queryUserRoleByUserId" resultMap="RoleMap">
+        SELECT
+        t1.*
+        FROM
+            T_XT_ROLE AS t1
+        LEFT JOIN
+            T_XT_USER_ROLE AS t2 ON t2.ROLE_ID = t1.ROLE_ID
+        WHERE
+            t2.USER_ID = #{userId}
+            ORDER BY ROLE_ID
+    </select>
+
+    <delete id="deleteUseRoleByUserId">
+        DELETE FROM T_XT_USER_ROLE WHERE  USER_ID= #{userId}
+    </delete>
+    <insert id="insertUserRoleByUserId">
+        INSERT INTO T_XT_USER_ROLE(ROLE_ID, USER_ID) VALUES (#{roleId}, #{userId})
+    </insert>
+    <select id="getInfoByLoginName" resultMap="UserMap">
+        SELECT
+            *
+        FROM
+            `T_XT_USER`
+        WHERE
+            IS_DEL !='-1'
+            and (LOGIN_NAME = #{loginName} or TEL = #{loginName})
+    </select>
+    <select id="getGZAPPAccountByLoginName" resultMap="UserMap">
+        SELECT
+            *
+        FROM
+            `T_XT_USER`
+        WHERE
+            USER_TYPE !='02'
+            and (LOGIN_NAME = #{loginName} or TEL = #{loginName})
+    </select>
+    <select id="getInfoByTel" resultMap="UserMap">
+        SELECT
+            *
+        FROM
+            `T_XT_USER`
+        WHERE
+            USER_TYPE = '02'
+                AND (TEL = #{tel} OR LOGIN_NAME =#{tel})
+    </select>
+</mapper>

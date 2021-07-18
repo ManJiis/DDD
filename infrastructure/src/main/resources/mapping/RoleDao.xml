@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="poc.infrastructure.systemManage.repository.dao.RoleDao">
+
+    <resultMap type="poc.infrastructure.systemManage.po.Role" id="RoleMap">
+        <result property="roleId" column="ROLE_ID" jdbcType="VARCHAR"/>
+        <result property="roleCode" column="ROLE_CODE" jdbcType="VARCHAR"/>
+        <result property="roleName" column="ROLE_NAME" jdbcType="VARCHAR"/>
+        <result property="remark" column="REMARK" jdbcType="VARCHAR"/>
+        <result property="isDelete" column="IS_DEL" jdbcType="VARCHAR"/>
+        <result property="createTime" column="CREATETIME" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="RoleMap">
+        select
+          ROLE_ID, ROLE_CODE, ROLE_NAME, REMARK, IS_DEL
+        from T_XT_ROLE
+        where ROLE_ID = #{roleId}
+    </select>
+    <select id="queryAllRole" resultMap="RoleMap">
+        SELECT
+        *
+        FROM T_XT_ROLE
+        WHERE IS_DEL='0'
+        ORDER BY ROLE_ID
+    </select>
+    <!--分页条件查询角色列表-->
+    <select id="queryRoleList" resultMap="RoleMap">
+        SELECT
+        ROLE_ID, ROLE_CODE, ROLE_NAME, REMARK, IS_DEL,CREATETIME
+        FROM T_XT_ROLE
+        WHERE 1=1 AND IS_DEL='0'
+        <if test="name != null and name !=''">
+            AND (ROLE_CODE LIKE CONCAT('%',#{name},'%') OR ROLE_NAME LIKE CONCAT('%',#{name},'%') OR REMARK LIKE
+            CONCAT('%',#{name},'%'))
+        </if>
+        LIMIT #{pg.start}, #{pg.pageSize}
+    </select>
+
+    <select id="queryRoleListCount" resultType="java.lang.Long">
+        SELECT
+        count(0)
+        FROM T_XT_ROLE
+        WHERE 1=1 AND IS_DEL='0'
+        <if test="name != null and name !=''">
+            AND (ROLE_CODE LIKE CONCAT('%',#{name},'%') OR ROLE_NAME LIKE CONCAT('%',#{name},'%') OR REMARK LIKE
+            CONCAT('%',#{name},'%'))
+        </if>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="roleId" useGeneratedKeys="true">
+        INSERT INTO T_XT_ROLE(ROLE_CODE, ROLE_NAME, REMARK,CREATETIME)
+        VALUES (#{roleCode}, #{roleName}, #{remark},#{createTime})
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        UPDATE T_XT_ROLE
+        <set>
+            <if test="roleCode != null and roleCode != ''">
+                ROLE_CODE = #{roleCode},
+            </if>
+            <if test="roleName != null and roleName != ''">
+                ROLE_NAME = #{roleName},
+            </if>
+            <if test="remark != null and remark != ''">
+                REMARK = #{remark},
+            </if>
+            EXCHANGETIME = #{exchangeTime}
+        </set>
+        WHERE ROLE_ID = #{roleId}
+    </update>
+
+    <!--逻辑删除角色-->
+    <delete id="deleteById">
+        UPDATE T_XT_ROLE SET IS_DEL = '1' WHERE ROLE_ID = #{roleId}
+    </delete>
+
+    <!--通过角色id删除-->
+    <delete id="deleteRolePermissionByRoleId">
+        DELETE FROM T_XT_ROLE_PERMISSION WHERE  ROLE_ID= #{id}
+    </delete>
+
+    <insert id="insertRolePermissionByRoleId">
+        INSERT INTO T_XT_ROLE_PERMISSION(ROLE_ID, PERMISSION_ID,CHECKED_STATUS)
+        VALUES (#{roleId}, #{permissionId},'1')
+    </insert>
+    <insert id="insertRPHalfByRoleId">
+        INSERT INTO T_XT_ROLE_PERMISSION(ROLE_ID, PERMISSION_ID,CHECKED_STATUS)
+        VALUES (#{roleId}, #{permissionId} ,'-1')
+    </insert>
+
+
+    <select id="queryMenuIdByRoleId" resultType="java.lang.Integer">
+        SELECT
+	        t1.PERMISSION_ID
+        FROM
+            T_XT_PERMISSION AS t1
+            LEFT JOIN T_XT_ROLE_PERMISSION AS t2 ON t2.PERMISSION_ID = t1.PERMISSION_ID
+        WHERE
+            t2.ROLE_ID = #{roleId}
+        ORDER BY
+            PERMISSION_ID
+    </select>
+
+    <!-- 查询全选状态菜单ID -->
+    <select id="querySelectMenuIdByRoleId" resultType="java.lang.Integer">
+        SELECT
+	        t1.PERMISSION_ID
+        FROM
+            T_XT_PERMISSION AS t1
+            LEFT JOIN T_XT_ROLE_PERMISSION AS t2 ON t2.PERMISSION_ID = t1.PERMISSION_ID
+        WHERE
+            t2.ROLE_ID = #{roleId} AND CHECKED_STATUS = '1'
+        ORDER BY
+            PERMISSION_ID
+    </select>
+    <!-- 查询半选状态菜单ID -->
+    <select id="queryHalfSelectMenuIdByRoleId" resultType="java.lang.Integer">
+        SELECT
+	        t1.PERMISSION_ID
+        FROM
+            T_XT_PERMISSION AS t1
+            LEFT JOIN T_XT_ROLE_PERMISSION AS t2 ON t2.PERMISSION_ID = t1.PERMISSION_ID
+        WHERE
+            t2.ROLE_ID = #{roleId} AND CHECKED_STATUS = '-1'
+        ORDER BY
+            PERMISSION_ID
+    </select>
+</mapper>
