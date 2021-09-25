@@ -6,11 +6,9 @@
 	<artifactId>infrastructure</artifactId>
 	<version>0.0.1</version>
 
-
-
 	<parent>
-		<artifactId>ddd</artifactId>
-		<groupId>top.b0x0.poc</groupId>
+		<artifactId>ddd-code-samples</artifactId>
+		<groupId>top.b0x0</groupId>
 		<version>0.0.1</version>
 	</parent>
 
@@ -44,7 +42,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>top.b0x0.poc</groupId>
+			<groupId>top.b0x0</groupId>
 			<artifactId>domain</artifactId>
 			<version>0.0.1</version>
 		</dependency>
